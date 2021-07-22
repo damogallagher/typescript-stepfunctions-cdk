@@ -21,8 +21,6 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "^1.115.0",
-    "@aws-cdk/aws-iam": "^1.115.0",
     "@aws-cdk/aws-lambda": "^1.115.0",
     "@aws-cdk/aws-stepfunctions": "^1.115.0",
     "@aws-cdk/aws-stepfunctions-tasks": "^1.115.0",

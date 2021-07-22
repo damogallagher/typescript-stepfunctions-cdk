@@ -2,8 +2,6 @@ import * as cdk from '@aws-cdk/core';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as sfn from '@aws-cdk/aws-stepfunctions';
 import * as tasks from '@aws-cdk/aws-stepfunctions-tasks';
-import * as apigateway from '@aws-cdk/aws-apigateway';
-import * as iam from '@aws-cdk/aws-iam';
 
 export class CdkStatemachineStack extends cdk.Stack {
   public Machine: sfn.StateMachine;
@@ -75,60 +73,5 @@ export class CdkStatemachineStack extends cdk.Stack {
       stateMachineName: 'randomNumberStateMachine',
       timeout: cdk.Duration.minutes(5),
     });
-
-
-    // Grab the state machine arn
-    const stateMachineArn = this.Machine.stateMachineArn;
-
-    // Grab the role for the api gateway
-    const credentialsRole = new iam.Role(this, "getRole", {
-      assumedBy: new iam.ServicePrincipal("apigateway.amazonaws.com"),
-    });
-
-    // Attach an inline policy for the statemachine arn to the credentials role
-    credentialsRole.attachInlinePolicy(
-      new iam.Policy(this, "getPolicy", {
-        statements: [
-          new iam.PolicyStatement({
-            actions: ["states:StartExecution"],
-            effect: iam.Effect.ALLOW,
-            resources: [stateMachineArn],
-          }),
-        ],
-      })
-    );
-
-    // Create an api gateway rest api
-    const api = new apigateway.RestApi(this, "endpoint");
-
-    // Create a method for invoking the step function via the api gateway
-    api.root.addMethod(
-      "GET",
-      new apigateway.AwsIntegration({
-        service: "states",
-        action: "StartExecution",
-        integrationHttpMethod: "POST",
-        options: {
-          credentialsRole,
-          integrationResponses: [
-            {
-              statusCode: "200",
-              responseTemplates: {
-                "application/json": `{"done": true}`,
-              },
-            },
-          ],
-          requestTemplates: {
-            "application/json": `{
-              "input": "{\\"maxNumber\\":\\"15\\", \\"numberToCheck\\":\\"7\\"}",
-              "stateMachineArn": "${stateMachineArn}"
-            }`,
-          },
-        },
-      }),
-      {
-        methodResponses: [{ statusCode: "200" }],
-      }
-    );
   }
 }
